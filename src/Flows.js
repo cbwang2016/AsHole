@@ -9,7 +9,7 @@ import {TokenCtx, ReplyForm} from './UserAction';
 
 import {API} from './flows_api';
 
-const IMAGE_BASE='http://www.pkuhelper.com/services/pkuhole/images/';
+const IMAGE_BASE='https://holeapi.wangcb.com//services/pkuhole/images/';
 const AUDIO_BASE='/audio_proxy/';
 
 const SEARCH_PAGESIZE=50;
