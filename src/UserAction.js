@@ -4,7 +4,7 @@ import {SafeTextarea} from './Common';
 import './UserAction.css';
 
 import {API_BASE} from './Common';
-const LOGIN_BASE=window.location.protocol==='https:' ? 'https://holeapi.wangcb.com/services/login' : 'http://www.pkuhelper.com/services/login';
+const LOGIN_BASE=window.location.protocol==='https:' ? '/login_proxy' : 'http://www.pkuhelper.com/services/login';
 const MAX_IMG_PX=2000;
 const MAX_IMG_FILESIZE=256000;
 
