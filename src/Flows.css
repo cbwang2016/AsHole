@@ -46,24 +46,6 @@
     clear: both;
 }
 
-@media screen and (max-width: 900px) {
-    .left-container .flow-item {
-        display: block;
-        width: calc(100vw - 20px);
-        max-width: 600px;
-        float: none;
-    }
-
-    .flow-reply-row {
-        display: flex;
-        width: 100% !important;
-        margin-left: 0;
-        padding-left: 30px;
-        margin-top: -2.5em;
-        margin-bottom: -1em;
-    }
-}
-
 .left-container .flow-reply {
     flex: 0 0 300px;
     max-height: 15em;
@@ -79,7 +61,7 @@
     width: calc(100% - 2 * 50px);
 }
 
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 1300px) {
     .aux-margin,
     .left-container .flow-item {
         margin-left: 10px;
@@ -89,7 +71,33 @@
     }
 
     .flow-reply-row {
-        width: calc(100% - 585px);
+        width: calc(100% - 485px);
+    }
+
+    .left-container .flow-item {
+        width: 500px;
+    }
+
+    .flow-item-row:hover::before {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .left-container .flow-item {
+        display: block;
+        width: calc(100vw - 20px);
+        max-width: 500px;
+        float: none;
+    }
+
+    .flow-reply-row {
+        display: flex;
+        width: 100% !important;
+        margin-left: 0;
+        padding-left: 30px;
+        margin-top: -2.5em;
+        margin-bottom: -1em;
     }
 }
 
@@ -107,14 +115,13 @@
     font-family: 'Consolas', 'Courier', monospace;
 }
 
-@media screen and (max-width: 1200px) {
-    .flow-item-row:hover::before {
-        display: none;
-    }
+.box-header {
+    font-size: small;
 }
 
 .flow-item-row p.img {
     text-align: center;
+    margin-top: .5em;
 }
 .flow-item-row p.img img {
     max-width: 100%;
@@ -129,10 +136,6 @@
     margin: 0 .5em;
 }
 
-.box-id {
-    opacity: .6;
-}
-
 .flow-item-dot {
     position: relative;
     top: calc(-.5em - 5px);
@@ -143,4 +146,12 @@
     border-radius: 50%;
     background-color: orange;
     box-shadow: 0 0 5px rgba(0,0,0,.4);
+}
+
+.box-content {
+    margin: .5em 0;
+}
+
+.box-id {
+    color: #666666;
 }

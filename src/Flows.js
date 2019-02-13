@@ -1,7 +1,7 @@
 import React, {Component, PureComponent} from 'react';
 import copy from 'copy-to-clipboard';
 import {ColorPicker} from './color_picker';
-import {Time, TitleLine, HighlightedText} from './Common';
+import {format_time, Time, TitleLine, HighlightedText} from './Common';
 import './Flows.css';
 import LazyLoad from 'react-lazyload';
 import {AudioWidget} from './AudioWidget';
@@ -38,6 +38,7 @@ function load_single_meta(show_sidebar,token) {
                     <FlowSidebar
                         info={single.data} replies={replies.data} attention={replies.attention}
                         token={token} show_sidebar={show_sidebar} color_picker={color_picker}
+                        deletion_detect={localStorage['DELETION_DETECT']==='on'}
                     />
                 )
             })
@@ -62,7 +63,9 @@ function Reply(props) {
                 <code className="box-id">#{props.info.cid}</code>&nbsp;
                 <Time stamp={props.info.timestamp} />
             </div>
-            <HighlightedText text={props.info.text} color_picker={props.color_picker} show_pid={props.show_pid} />
+            <div className="box-content">
+                <HighlightedText text={props.info.text} color_picker={props.color_picker} show_pid={props.show_pid} />
+            </div>
         </div>
     );
 }
@@ -70,7 +73,12 @@ function Reply(props) {
 function FlowItem(props) {
     function copy_link(event) {
         event.preventDefault();
-        copy(event.target.href);
+        copy(
+            `${event.target.href}\n`+
+            `${props.info.text}${props.info.type==='image'?' [图片]':props.info.type==='audio'?' [语音]':''}\n`+
+            `（${format_time(new Date(props.info.timestamp*1000))} ${props.info.likenum}关注 ${props.info.reply}回复）\n`+
+            props.replies.map((r)=>(r.text)).join('\n')
+        );
     }
 
     return (
@@ -93,16 +101,18 @@ function FlowItem(props) {
                 &nbsp;
                 <Time stamp={props.info.timestamp} />
             </div>
-            <HighlightedText text={props.info.text} color_picker={props.color_picker} show_pid={props.show_pid} />
-            {props.info.type==='image' &&
-                <p className="img">
-                    {props.img_clickable ?
-                        <a href={IMAGE_BASE+props.info.url} target="_blank"><img src={IMAGE_BASE+props.info.url} /></a> :
-                        <img src={IMAGE_BASE+props.info.url} />
-                    }
-                </p>
-            }
-            {props.info.type==='audio' && <AudioWidget src={AUDIO_BASE+props.info.url} />}
+            <div className="box-content">
+                <HighlightedText text={props.info.text} color_picker={props.color_picker} show_pid={props.show_pid} />
+                {props.info.type==='image' &&
+                    <p className="img">
+                        {props.img_clickable ?
+                            <a href={IMAGE_BASE+props.info.url} target="_blank"><img src={IMAGE_BASE+props.info.url} /></a> :
+                            <img src={IMAGE_BASE+props.info.url} />
+                        }
+                    </p>
+                }
+                {props.info.type==='audio' && <AudioWidget src={AUDIO_BASE+props.info.url} />}
+            </div>
         </div>
     );
 }
@@ -121,7 +131,7 @@ class FlowSidebar extends PureComponent {
         this.syncState=props.sync_state||(()=>{});
     }
 
-    load_replies() {
+    load_replies(update_count=true) {
         this.setState({
             loading_status: 'loading',
         });
@@ -129,9 +139,9 @@ class FlowSidebar extends PureComponent {
             .then((json)=>{
                 this.setState((prev,props)=>({
                     replies: json.data,
-                    info: Object.assign({}, prev.info, {
+                    info: update_count ? Object.assign({}, prev.info, {
                         reply: ''+json.data.length,
-                    }),
+                    }) : prev.info,
                     attention: !!json.attention,
                     loading_status: 'done',
                 }), ()=>{
@@ -213,20 +223,20 @@ class FlowSidebar extends PureComponent {
         return (
             <div className="flow-item-row sidebar-flow-item">
                 <div className="box box-tip">
-                    {star_brush &&
+                    {(star_brush && !!this.props.token) &&
                         <span>
                             <a onClick={this.star_brush.bind(this)}>-</a>
                             &nbsp;/&nbsp;
                         </span>
                     }
-                    {this.props.token &&
+                    {!!this.props.token &&
                         <span>
                             <a onClick={this.report.bind(this)}>举报</a>
                             &nbsp;/&nbsp;
                         </span>
                     }
                     <a onClick={this.load_replies.bind(this)}>刷新回复</a>
-                    {this.props.token &&
+                    {!!this.props.token &&
                         <span>
                             &nbsp;/&nbsp;
                             <a onClick={()=>{
@@ -241,14 +251,20 @@ class FlowSidebar extends PureComponent {
                     }
                 </div>
                 <FlowItem info={this.state.info} attention={this.state.attention} img_clickable={true}
-                    color_picker={this.color_picker} show_pid={this.show_pid} />
+                    color_picker={this.color_picker} show_pid={this.show_pid} replies={this.state.replies} />
+                {(this.props.deletion_detect && parseInt(this.state.info.reply)>this.state.replies.length) &&
+                    <div className="box box-tip flow-item box-danger">
+                        {parseInt(this.state.info.reply)-this.state.replies.length} 条回复被删除
+                    </div>
+                }
                 {this.state.replies.map((reply)=>(
                     <LazyLoad key={reply.cid} offset={500} height="5em" overflow={true} once={true}>
                         <Reply info={reply} color_picker={this.color_picker} show_pid={this.show_pid} />
                     </LazyLoad>
                 ))}
-                {this.props.token &&
-                    <ReplyForm pid={this.state.info.pid} token={this.props.token} on_complete={this.load_replies.bind(this)} />
+                {!!this.props.token ?
+                    <ReplyForm pid={this.state.info.pid} token={this.props.token} on_complete={this.load_replies.bind(this)} /> :
+                    <div className="box box-tip flow-item">登录后可以回复树洞</div>
                 }
             </div>
         )
@@ -270,11 +286,11 @@ class FlowItemRow extends PureComponent {
 
     componentDidMount() {
         if(parseInt(this.state.info.reply,10)) {
-            this.load_replies();
+            this.load_replies(null,/*update_count=*/false);
         }
     }
 
-    load_replies(callback) {
+    load_replies(callback,update_count=true) {
         console.log('fetching reply',this.state.info.pid);
         this.setState({
             reply_status: 'loading',
@@ -283,9 +299,9 @@ class FlowItemRow extends PureComponent {
             .then((json)=>{
                 this.setState((prev,props)=>({
                     replies: json.data,
-                    info: Object.assign({}, prev.info, {
+                    info: update_count ? Object.assign({}, prev.info, {
                         reply: ''+json.data.length,
-                    }),
+                    }) : prev.info,
                     attention: !!json.attention,
                     reply_status: 'done',
                 }),callback);
@@ -305,6 +321,7 @@ class FlowItemRow extends PureComponent {
             <FlowSidebar
                 info={this.state.info} replies={this.state.replies} attention={this.state.attention} sync_state={this.setState.bind(this)}
                 token={this.props.token} show_sidebar={this.props.show_sidebar} color_picker={this.color_picker}
+                deletion_detect={this.props.deletion_detect}
             />
         );
     }
@@ -316,7 +333,7 @@ class FlowItemRow extends PureComponent {
                     this.show_sidebar();
             }}>
                 <FlowItem info={this.state.info} attention={this.state.attention} img_clickable={false}
-                    color_picker={this.color_picker} show_pid={this.show_pid} />
+                    color_picker={this.color_picker} show_pid={this.show_pid} replies={this.state.replies} />
                 <div className="flow-reply-row">
                     {this.state.reply_status==='loading' && <div className="box box-tip">加载中</div>}
                     {this.state.reply_status==='failed' &&
@@ -349,7 +366,8 @@ function FlowChunk(props) {
                                     </div>
                                 </div>
                             }
-                            <FlowItemRow info={info} show_sidebar={props.show_sidebar} token={token} />
+                            <FlowItemRow info={info} show_sidebar={props.show_sidebar} token={token}
+                                    deletion_detect={props.deletion_detect} />
                         </div>
                     </LazyLoad>
                 ))}
