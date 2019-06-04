@@ -1,3 +1,4 @@
-/api_proxy/*  http://holeproxy.wangcb.com/services/pkuhole/:splat  200
-/audio_proxy/*  http://holeproxy.wangcb.com/services/pkuhole/audios/:splat  200
-/login_proxy/*  http://holeproxy.wangcb.com/services/login/:splat  200
+/api_proxy/*  http://pkuhelper.pku.edu.cn/services/pkuhole/:splat  200
+/audio_proxy/*  http://pkuhelper.pku.edu.cn/services/pkuhole/audios/:splat  200
+/login_proxy/*  http://pkuhelper.pku.edu.cn/services/login/:splat  200
+/services/*  http://pkuhelper.pku.edu.cn/services/:splat  200
